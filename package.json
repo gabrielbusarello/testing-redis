@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "ioredis": "^4.9.0",
+    "socket.io": "^2.2.0"
+  },
+  "scripts": {
+    "dev": "node server.js"
+  }
+}

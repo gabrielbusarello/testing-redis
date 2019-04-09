@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <title>Socket.io</title>
+    </head>
+    <body>
+        <h1>Simulando cliente em um servidor broadcast</h1>
+        <div id="message"></div>
+    </body>
+    <script src="socket.io/socket.io.js"></script>
+    <!-- <script src="http://localhost/app/socket.io/socket.io.js"></script> -->
+    <!-- <script src="https://cdn.socket.io/socket.io-1.4.0.js"></script> -->
+    <script>
+        const socket = io();
+
+        socket.on('products', (data) => {
+            const el = document.querySelector('#message');
+            el.innerHTML = "<h1>" + data + "</h1>";
+            console.log(data);
+        });
+    </script>
+</html>
