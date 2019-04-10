@@ -10,7 +10,7 @@
     <script>
         const socket = io();
 
-        socket.on('products', (data) => {
+        socket.on(localStorage.getItem('token'), (data) => {
             const el = document.querySelector('#message');
             el.innerHTML = "<h1>" + data + "</h1>";
             console.log(data);
