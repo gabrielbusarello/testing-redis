@@ -2,6 +2,10 @@ version: '3'
 
 networks:
   redisN:
+  bancoN:
+
+volumes:
+  banco:
 
 services:
   frontend:
@@ -22,15 +26,27 @@ services:
       - ./package.json:/app/package.json
       - ./server.js:/app/server.js
       - ./index.html:/app/index.html
-      - ./index.js:/app/index.js
     working_dir: /app
     # command: ["node", "index.js"]
     command: ["npm", "run", "dev"]
     networks:
       - redisN
+      - bancoN
     depends_on:
       - redis
+      - db
   redis:
-    image: redis
+    image: redis:5.0
     networks:
       - redisN
+  db:
+    image: mysql:8.0
+    volumes:
+      - banco:/var/lib/mysql
+      - ./scripts:/scripts
+      - ./banco/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - bancoN
+    environment:
+      MYSQL_ROOT_PASSWORD: redis
+      MYSQL_DATABASE: redis_reg
