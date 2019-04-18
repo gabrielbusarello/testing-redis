@@ -22,6 +22,11 @@ const resposta500 = {
     'status': false,
     'message': 'Pode ter ocorrido um problema do serviço Redis ou do Banco de dados, tente novamente'
 };
+
+const resposta401 = {
+    'status': false,
+    'message': 'O header Authorization não foi informado ou está inválido'
+}
 /* Respostas HTTP */
 
 const app = express();
@@ -46,26 +51,26 @@ app.get('/', (req, res) => {
 
 app.post('/publish', (req, res) => {
     const body = req.body;
-    let redisResponse;
-    redisPub.publish(body.canal, body.mensagem).then((response) => {
-        redisResponse = response;
-        connection.query(`
-            INSERT registers (channel, message, pub_redis) VALUES ("${body.canal}", "${body.mensagem}", ${redisResponse})
-        `, (err, result, fields) => {
-            console.log(redisResponse);
-            console.log(err);
-            console.log(result);
-            console.log(fields);
-    
-            if (err || redisResponse === 0) {
-                res.status(500);
-                res.json(resposta500);
-            } else {
-                res.status(201)
-                res.json(resposta201);
-            }
+    if (req.headers.authorization && req.headers.authorization === 'UmVkaXNVbml2aWxsZU5vdGlmaWNhY29lc0FwaQ==') {
+        let redisResponse;
+        redisPub.publish(body.canal, JSON.stringify(body.mensagem)).then((response) => {
+            redisResponse = response;
+            connection.query(`
+                INSERT registers (channel, message, pub_redis) VALUES ("${body.canal}", "${body.mensagem}", ${redisResponse})
+            `, (err, result, fields) => {    
+                if (err || redisResponse === 0) {
+                    res.status(500);
+                    res.json(resposta500);
+                } else {
+                    res.status(201);
+                    res.json(resposta201);
+                }
+            });
         });
-    });
+    } else {
+        res.status(401);
+        res.json(resposta401);
+    }
 });
 
 const server = app.listen(3000);
