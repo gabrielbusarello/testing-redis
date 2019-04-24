@@ -43,9 +43,23 @@ app.get('/', (req, res) => {
             res.writeHead(500);
             return res.end('Error loading index.html');
         }
+        console.log(data);
 
-        res.writeHead(200);
-        res.end(data);
+        connection.query(`
+            SELECT * FROM registers
+        `, (err, result, fields) => {    
+            if (err) {
+                res.status(500);
+                res.json(resposta500);
+            } else {
+                res.status(201);
+                console.log(result);
+                res.json(result);
+            }
+        });
+
+        // res.writeHead(200);
+        // res.end(data);
     });
 })
 
@@ -55,6 +69,7 @@ app.post('/publish', (req, res) => {
         let redisResponse;
         redisPub.publish(body.canal, JSON.stringify(body.mensagem)).then((response) => {
             redisResponse = response;
+            body.mensagem = JSON.stringify(body.mensagem).replace(/"/g, '\\"');
             connection.query(`
                 INSERT registers (channel, message, pub_redis) VALUES ("${body.canal}", "${body.mensagem}", ${redisResponse})
             `, (err, result, fields) => {    
