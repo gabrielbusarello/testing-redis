@@ -11,6 +11,7 @@ const connection = mysql.createConnection({
     password: 'redis',
     database: 'redis_reg'
 });
+const prettier = require('./prettier.js');
 
 /* Respostas HTTP */
 const resposta201 = {
@@ -38,30 +39,27 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
+    getReg().then((result) => {
+        res.status(200);
+        if (req.query.prettier) {
+            res.end(prettier.getUltimosReg(result));
+        } else {
+            res.json(result);
+        }
+    });
+});
+
+app.get('/working', (req, res) => {
     fs.readFile(__dirname + '/index.html', (err, data) => {
         if (err) {
             res.writeHead(500);
             return res.end('Error loading index.html');
         }
-        console.log(data);
 
-        connection.query(`
-            SELECT * FROM registers
-        `, (err, result, fields) => {    
-            if (err) {
-                res.status(500);
-                res.json(resposta500);
-            } else {
-                res.status(201);
-                console.log(result);
-                res.json(result);
-            }
-        });
-
-        // res.writeHead(200);
-        // res.end(data);
+        res.writeHead(200);
+        res.end(data);
     });
-})
+});
 
 app.post('/publish', (req, res) => {
     const body = req.body;
@@ -99,3 +97,18 @@ redisSub.psubscribe('*', () => {
 redisSub.on("error", function(err){
     console.log(err);
 });
+
+function getReg() {
+    return new Promise((resolve, reject) => {
+        connection.query(`
+            SELECT * FROM registers ORDER BY id DESC
+        `, (err, result, fields) => {    
+            if (err) {
+                res.status(500);
+                res.json(resposta500);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
