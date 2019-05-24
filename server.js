@@ -4,14 +4,8 @@ const bodyParser = require('body-parser');
 const Redis = require('ioredis');
 const redisSub = new Redis(6379, 'redis');
 const redisPub = new Redis(6379, 'redis');
-const mysql = require('mysql');
-const connection = mysql.createConnection({
-    host: 'db',
-    user: 'root',
-    password: 'redis',
-    database: 'redis_reg'
-});
-const prettier = require('./prettier.js');
+const notification = require('./connection').Notification;
+const prettier = require('./prettier');
 
 /* Respostas HTTP */
 const resposta201 = {
@@ -67,18 +61,14 @@ app.post('/publish', (req, res) => {
         let redisResponse;
         redisPub.publish(body.canal, JSON.stringify(body.mensagem)).then((response) => {
             redisResponse = response;
-            body.mensagem = JSON.stringify(body.mensagem).replace(/"/g, '\\"');
-            connection.query(`
-                INSERT registers (channel, message, pub_redis) VALUES ("${body.canal}", "${body.mensagem}", ${redisResponse})
-            `, (err, result, fields) => {    
-                if (err || redisResponse === 0) {
-                    res.status(500);
-                    res.json(resposta500);
-                } else {
-                    res.status(201);
-                    res.json(resposta201);
-                }
-            });
+            body.mensagem = JSON.stringify(body.mensagem);
+            notification.create({ channel: body.canal, message: body.mensagem, pub_redis: redisResponse }).then((notification) => {
+                res.status(201);
+                res.json(resposta201);
+            }).catch((err) => {
+                res.status(500);
+                res.json(resposta500);
+            })
         });
     } else {
         res.status(401);
@@ -100,15 +90,14 @@ redisSub.on("error", function(err){
 
 function getReg() {
     return new Promise((resolve, reject) => {
-        connection.query(`
-            SELECT * FROM registers ORDER BY id DESC
-        `, (err, result, fields) => {    
-            if (err) {
-                res.status(500);
-                res.json(resposta500);
-            } else {
-                resolve(result);
-            }
+        notification.findAll({
+            order: [
+                ['id', 'DESC']
+            ]
+        }).then(notifications => {
+            resolve(notifications);
+        }).catch(err => {
+            throw Error(err);
         });
     });
 }

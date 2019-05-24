@@ -50,7 +50,7 @@ function getRegistrosEmTabela(result) {
                 '<td>' + elem.channel + '</td>' +
                 '<td>' + handleMessage(elem.message) + '</td>' +
                 '<td>' + (elem.pub_redis === 1 ? 'Yes' : 'No') + '</td>' +
-                '<td>' + elem.date + '</td></tr>';
+                '<td>' + elem.createdAt + '</td></tr>';
     });
 
     const tabela = `<table>
@@ -72,7 +72,7 @@ function getRegistrosEmTabela(result) {
 }
 
 function handleMessage(message) {
-    message = JSON.parse(message);
+    message = JSON.parse(message.replace(/\\"/g, '"'));
     return 'Tipo: ' + message.tipo + '<br />' +
             'Título: ' + message.titulo.replace(/,/g, '{$vrgl$}') + '<br />' +
             'Corpo: ' + message.corpo.replace(/,/g, '{$vrgl$}') + '<br />' +

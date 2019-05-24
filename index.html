@@ -2,18 +2,39 @@
 <html>
     <head>
         <title>Socket.io</title>
+        <meta charset="utf-8" />
     </head>
     <body>
-        <h1>Simulando cliente em um servidor broadcast</h1>
+        <h1>Bem vindo a página de testes de notificações</h1>
+        <div>
+            <label for="canal">Canal</label>
+            <input id="canal" value="socket" />
+            <button id="enviaSocket" onclick="mudaSocket()">Mudar Canal</button>
+        </div>
         <div id="message"></div>
     </body>
     <script src="socket.io/socket.io.js"></script>
     <script>
         const socket = io();
+        var canalAnterior = '';
 
-        socket.on('socket', (data) => {
+        mudaSocket();
+
+        function mudaSocket() {
             const el = document.querySelector('#message');
-            el.innerHTML = "<h1>" + data + "</h1>";
-        });
+            socket.off(canalAnterior);
+            el.innerHTML = '';
+
+            canal = document.getElementById('canal').value;
+
+            socket.on(canal, (data) => {
+                el.innerHTML = '<h1>' + data + '</h1>';
+            });
+            canalAnterior = canal;
+        }
+
+        function limpaMensagem() {
+            document.getElementById('message').innerHTML = '';
+        }
     </script>
 </html>
